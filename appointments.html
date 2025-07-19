@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Appointments</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    h1 { color: #00796b; text-align: center; }
+    form { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px; }
+    label { display: block; margin-top: 10px; }
+    input, select { width: 100%; padding: 8px; margin-top: 5px; }
+    button { margin-top: 15px; background: #00796b; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }
+    .appointments { margin-top: 20px; }
+    ul { padding: 0; list-style: none; }
+    li {
+      background: #ffffff;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-left: 5px solid #00796b;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+
+  <a href="home.html" class="back">← Back to Home</a>
+  <h1>📅 Book an Appointment</h1>
+
+  <form id="appointmentForm">
+    <label for="doctor">Select Doctor:</label>
+    <select id="doctor" required></select>
+
+    <label for="date">Select Date:</label>
+    <input type="date" id="date" required />
+
+    <label for="time">Select Time:</label>
+    <input type="time" id="time" required />
+
+    <button type="submit">Book Appointment</button>
+  </form>
+
+  <div class="appointments">
+    <h2>Booked Appointments</h2>
+    <ul id="appointmentList"></ul>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const API_DOCTORS = 'http://localhost:5000/api/doctors';
+    const API_APPOINTMENTS = 'http://localhost:5000/api/appointments';
+
+    const doctorSelect = document.getElementById('doctor');
+    const appointmentList = document.getElementById('appointmentList');
+
+    // Load doctors
+    async function loadDoctors() {
+      try {
+        const res = await fetch(API_DOCTORS);
+        const data = await res.json();
+        doctorSelect.innerHTML = data.map(doc =>
+          `<option value="${doc.id}">${doc.name} - ${doc.specialization}</option>`
+        ).join('');
+      } catch (err) {
+        console.error('❌ Failed to load doctors:', err);
+      }
+    }
+
+    // Load appointments
+    async function loadAppointments() {
+      try {
+        const res = await fetch(API_APPOINTMENTS, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch appointments');
+
+        const appointments = await res.json();
+        appointmentList.innerHTML = '';
+
+        appointments.forEach(app => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <strong>${app.date}</strong> - ${app.time}<br>
+            🏥 Clinic: ${app.Clinic?.name || 'N/A'}<br>
+            🧑‍⚕️ Doctor: ${app.Doctor?.name || 'N/A'}<br>
+            📌 Status: ${app.status || 'Pending'}
+          `;
+          appointmentList.appendChild(li);
+        });
+      } catch (err) {
+        console.error('❌ Error loading appointments:', err);
+      }
+    }
+
+    // Submit new appointment
+    document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const doctorId = doctorSelect.value;
+      const date = document.getElementById('date').value;
+      const time = document.getElementById('time').value;
+
+      try {
+        const res = await fetch(API_APPOINTMENTS, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ doctorId, date, time })
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          alert("✅ Appointment booked!");
+          loadAppointments();
+        } else {
+          alert("❌ Error: " + (result.message || result.error));
+        }
+      } catch (err) {
+        console.error('❌ Error booking appointment:', err);
+      }
+    });
+
+    // Initial load
+    loadDoctors();
+    loadAppointments();
+  </script>
+
+</body>
+</html>
+
+

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Doctors Management</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #00695c;
+    }
+
+    form {
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #00796b;
+      color: white;
+      padding: 10px;
+      border: none;
+      width: 100%;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #004d40;
+    }
+
+    ul {
+      max-width: 700px;
+      margin: 20px auto;
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background-color: #ffffff;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-left: 5px solid #00796b;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    strong {
+      color: #00695c;
+    }
+
+    .login-link {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .login-link a {
+      color: #00796b;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Doctor Management</h1>
+
+  <form id="doctorForm">
+    <input type="text" id="name" placeholder="Doctor Name" required />
+    <input type="text" id="specialization" placeholder="Specialization" required />
+    <input type="text" id="phone" placeholder="Phone Number" required />
+    
+    <input type="email" id="email" placeholder="Email (for login)" required />
+    <input type="password" id="password" placeholder="Password" required />
+    
+    <select id="clinicId" required>
+      <option value="">Select Clinic</option>
+    </select>
+
+    <input type="text" id="availability" placeholder="Availability (e.g., Mon-Fri)" required />
+
+    <button type="submit">Add Doctor</button>
+  </form>
+
+  <h2>Doctors List</h2>
+  <div class="login-link">
+    <a href="doctor-login.html">Doctor Login</a>
+  </div>
+
+  <ul id="doctorList"></ul>
+
+  <script>
+    const API_CLINICS = 'http://localhost:5000/api/clinics';
+    const API_DOCTORS = 'http://localhost:5000/api/doctors';
+
+    // Load clinics into dropdown
+    async function loadClinics() {
+      try {
+        const res = await fetch(API_CLINICS);
+        const clinics = await res.json();
+        const select = document.getElementById('clinicId');
+        clinics.forEach(clinic => {
+          const option = document.createElement('option');
+          option.value = clinic.id;
+          option.textContent = clinic.name + " - " + clinic.location;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error('Failed to load clinics:', err);
+      }
+    }
+
+    // Load doctors list
+    async function loadDoctors() {
+      try {
+        const res = await fetch(API_DOCTORS);
+        const doctors = await res.json();
+        const list = document.getElementById('doctorList');
+        list.innerHTML = '';
+
+        doctors.forEach(doctor => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <strong>${doctor.name}</strong><br>
+            Specialization: ${doctor.specialization}<br>
+            Phone: ${doctor.phone}<br>
+            Availability: ${doctor.availability}<br>
+            Clinic: ${doctor.Clinic?.name || 'N/A'} (${doctor.Clinic?.location || 'N/A'})
+          `;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        console.error('Failed to load doctors:', err);
+      }
+    }
+
+    // Handle doctor form submission
+    document.getElementById('doctorForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const doctor = {
+        name: document.getElementById('name').value,
+        specialization: document.getElementById('specialization').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        clinicId: document.getElementById('clinicId').value,
+        availability: document.getElementById('availability').value
+      };
+
+      try {
+        await fetch(API_DOCTORS, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(doctor)
+        });
+
+        e.target.reset();
+        loadDoctors();
+      } catch (err) {
+        console.error('Error adding doctor:', err);
+      }
+    });
+
+    // Initial load
+    loadClinics();
+    loadDoctors();
+  </script>
+</body>
+</html>
+

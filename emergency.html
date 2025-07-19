@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Emergency Contacts</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #d32f2f;
+    }
+    .emergency {
+      background: #fff;
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 5px solid #d32f2f;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .emergency h3 {
+      margin: 0;
+      color: #b71c1c;
+    }
+    .emergency p {
+      margin: 4px 0;
+    }
+    a.back {
+      display: inline-block;
+      margin-bottom: 20px;
+      text-decoration: none;
+      color: #00796b;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="home.html" class="back">← Back to Home</a>
+  <h1>🚨 Emergency Resources</h1>
+
+  <div id="emergencyContainer"></div>
+
+  <script>
+    const API_URL = 'http://localhost:5000/api/emergency';
+
+    async function loadEmergencyResources() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+
+        const container = document.getElementById('emergencyContainer');
+        container.innerHTML = '';
+
+        data.forEach(resource => {
+          const div = document.createElement('div');
+          div.className = 'emergency';
+          div.innerHTML = `
+            <h3>${resource.serviceName}</h3>
+            <p>📍 Region: <strong>${resource.region}</strong></p>
+            <p>📞 Contact: <strong>${resource.contactInfo}</strong></p>
+            <p>🧾 Type: ${resource.serviceType}</p>
+          `;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        console.error('Error loading emergency resources:', err);
+        alert('Could not load emergency contacts.');
+      }
+    }
+
+    loadEmergencyResources();
+  </script>
+
+</body>
+</html>

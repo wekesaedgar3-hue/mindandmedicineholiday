@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Your Profile</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    h1 { color: #00796b; text-align: center; }
+    p { font-size: 16px; }
+    .logout-btn {
+      margin-top: 20px;
+      background: #c62828;
+      color: white;
+      padding: 10px;
+      border: none;
+      width: 100%;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .back-link {
+      text-align: center;
+      display: block;
+      margin-top: 10px;
+      text-decoration: none;
+      color: #00796b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>👤 Your Profile</h1>
+    <div id="profileInfo">
+      <p><strong>Name:</strong> <span id="name">Loading...</span></p>
+      <p><strong>Email:</strong> <span id="email">Loading...</span></p>
+    </div>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    <a href="home.html" class="back-link">← Back to Home</a>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const nameSpan = document.getElementById('name');
+    const emailSpan = document.getElementById('email');
+
+    async function loadProfile() {
+      if (!token) {
+        alert('You are not logged in!');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const res = await fetch('http://localhost:5000/api/users/me', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      if (res.ok) {
+        const user = await res.json();
+        nameSpan.textContent = user.name;
+        emailSpan.textContent = user.email;
+      } else {
+        alert('Failed to load profile.');
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      alert('✅ Logged out');
+      window.location.href = 'login.html';
+    }
+
+    loadProfile();
+  </script>
+
+</body>
+</html>
